@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dishwasher Discount Spinner Wheel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            min-height: 200vh; /* Added scroll space */
+            position: relative;
+        }
+
+        header {
+            text-align: center;
+            background-color: #333;
+            color: white;
+            padding: 20px;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .wheel-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            margin-top: 50px;
+        }
+
+        #wheel {
+            border: 5px solid #333;
+            border-radius: 50%;
+            cursor: pointer;
+            width: 350px;
+            height: 350px;
+        }
+
+        /* Center the arrow at the top of the wheel */
+        .arrow {
+            width: 0;
+            height: 0;
+            border-left: 25px solid transparent;
+            border-right: 25px solid transparent;
+            border-top: 40px solid red; /* Arrow points upwards */
+            position: absolute;
+            top: -30px; /* Positioned just above the wheel */
+            left: 50%; /* Center horizontally */
+            transform: translateX(-50%);
+        }
+
+        .hamburger-menu {
+            margin-top: 50px; /* Space from previous content */
+            text-align: center; /* Center it horizontally */
+        }
+
+        .hamburger-icon {
+            font-size: 30px;
+            cursor: pointer;
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            border-radius: 50%;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .menu-options {
+            display: none;
+            margin-top: 10px;
+            background-color: #333;
+            padding: 10px;
+            border-radius: 5px;
+            width: 200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .menu-options button {
+            display: block;
+            background-color: white;
+            color: black;
+            border: none;
+            padding: 10px;
+            margin: 5px 0;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            border-radius: 5px;
+        }
+
+        .menu-options button:hover {
+            background-color: #ddd;
+        }
+
+        /* Extra content for scrollability */
+        .extra-content {
+            margin-top: 50px;
+            text-align: center;
+            padding: 50px;
+            background-color: #fafafa;
+            border-top: 2px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        Dishwasher Discount
+    </header>
+
+    <div class="wheel-container">
+        <div class="arrow"></div> <!-- Arrow that stays fixed at the top -->
+        <canvas id="wheel" width="300" height="300" onclick="spinWheel()"></canvas>
+    </div>
+
+    <div class="extra-content">
+        <h2>Congratulations!</h2>
+        <p>Spin the wheel to win amazing discounts on your next dishwasher purchase.</p>
+    </div>
+
+    <!-- Hamburger Menu at the bottom -->
+    <div class="hamburger-menu" id="hamburgerMenu">
+        <div class="hamburger-icon" onclick="toggleMenu()">&#9776;</div>
+        <div class="menu-options" id="menuOptions">
+            <button onclick="setDiscount(1)">1% Discount</button>
+            <button onclick="setDiscount(10)">100% Discount</button>
+            <button onclick="setDiscount(20)">20% Discount</button>
+            <button onclick="setDiscount(100)">10% Discount</button>
+        </div>
+    </div>
+
+    <script>
+        // Wheel Variables
+        const canvas = document.getElementById("wheel");
+        const ctx = canvas.getContext("2d");
+        const wheelRadius = canvas.width / 2;
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        // Discount sections with adjusted angles (custom angles in radians)
+        const sections = [
+            { color: "#FF5733", label: "100% Discount", value: 100, angle: (130 * Math.PI / 180) }, // 130 degrees
+            { color: "#33FF57", label: "20% Discount", value: 20, angle: (90 * Math.PI / 180) }, // 90 degrees
+            { color: "#339BFF", label: "10% Discount", value: 10, angle: (90 * Math.PI / 180) }, // 90 degrees
+            { color: "#FFC300", label: "1% Discount", value: 1, angle: (50 * Math.PI / 180) } // 50 degrees
+        ];
+
+        // Set default discount value
+        let selectedDiscount = null;
+        let isSpinning = false;
+
+        // Draw Wheel
+        function drawWheel() {
+            let startAngle = 0;
+
+            sections.forEach((section) => {
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, wheelRadius, startAngle, startAngle + section.angle);
+                ctx.closePath();
+                ctx.fillStyle = section.color;
+                ctx.fill();
+
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(startAngle + section.angle / 2);
+                ctx.fillStyle = "white";
+                ctx.font = "16px Arial";
+                ctx.fillText(section.label, 60, 0);
+                ctx.restore();
+
+                startAngle += section.angle;
+            });
+        }
+
+        // Handle Menu Toggle
+        function toggleMenu() {
+            const menuOptions = document.getElementById("menuOptions");
+            menuOptions.style.display = menuOptions.style.display === "block" ? "none" : "block";
+        }
+
+        // Handle Discount Selection
+        function setDiscount(discount) {
+            selectedDiscount = discount;
+            toggleMenu();
+        }
+
+        // Spin Wheel on touch/click
+        function spinWheel() {
+            if (isSpinning || selectedDiscount === null) return; // Prevents multiple spins at once and requires a discount to be selected
+            isSpinning = true;
+
+            let startAngle = 0;
+            const spinAmount = Math.floor(Math.random() * 360) + 720; // Random spin (minimum 720 degrees)
+            const targetAngle = getTargetAngle(selectedDiscount); // Get angle for selected discount
+
+            let spinInterval = setInterval(() => {
+                startAngle += 10;
+                if (startAngle >= spinAmount) {
+                    clearInterval(spinInterval);
+                    isSpinning = false;
+                    startAngle = targetAngle;
+                }
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(startAngle * Math.PI / 180);
+                ctx.translate(-centerX, -centerY);
+                drawWheel();
+                ctx.restore();
+            }, 10);
+        }
+
+        // Get target angle for discount
+        function getTargetAngle(discount) {
+            const section = sections.find(s => s.value === discount);
+            const sectionIndex = sections.indexOf(section);
+            const startAngle = sections.slice(0, sectionIndex).reduce((sum, s) => sum + s.angle, 0);
+            return startAngle * (180 / Math.PI); // Convert radians to degrees
+        }
+
+        // Initialize wheel
+        drawWheel();
+    </script>
+</body>
+</html>
